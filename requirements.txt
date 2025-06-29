@@ -3,3 +3,5 @@ numpy==1.23.5
 scikit-learn==1.2.2
 fastapi==0.95.0
 uvicorn==0.21.1
+flake8==6.0.0
+pytest==7.4.0
