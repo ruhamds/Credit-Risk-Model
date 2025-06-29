@@ -1,122 +1,102 @@
-Credit Risk Probability Model for Alternative Data
-Overview
-This project develops a machine learning model to predict the Probability of Default (PD) for borrowers using alternative data (e.g., transaction amounts, product categories like airtime or utility bills). The model aligns with Basel II standards and uses a structured pipeline for feature engineering, training, and inference. The project leverages a transaction-level dataset with features like CustomerId, Amount, ProductCategory, and FraudResult (used as a proxy for default).
-Project Structure
+💳 Credit Risk Modeling Project
+This project builds a credit risk scoring model to predict Probability of Default (PD) using alternative data (e.g., transactions, product categories). It aligns with Basel II standards and includes a modular pipeline for feature engineering, EDA, and modeling.
+
+📌 Task 1 - Credit Scoring Business Understanding
+1. Basel II and Interpretability
+The Basel II Accord requires transparent, auditable models for estimating PD. Interpretable models (e.g., Logistic Regression) and clear documentation (e.g., feature engineering) ensure regulatory compliance and stakeholder trust.
+2. Proxy for Default
+Lacking a direct default label, we use FraudResult as a proxy. This enables modeling for thin-file borrowers but risks:
+
+Inaccuracy: Poor correlation with defaults.
+Bias: Unfair lending decisions.
+Compliance: Regulatory scrutiny over proxy validity.
+
+3. Model Trade-offs
+
+
+| Aspect | Simple (Logistic Regression + WoE) | Complex (e.g., Random Forest, XGBoost) |
+|--------|------------------------------------|----------------------------------------|
+| **Interpretability** | ✅ High – easy to explain | ❌ Low – black box |
+| **Regulatory Acceptance** | ✅ Strong | ⚠️ Conditional |
+| **Performance** | ❌ Limited | ✅ High |
+| **Training Cost** | ✅ Low | ❌ Higher |
+| **Use Case Fit** | Ideal for compliance and explanation | Ideal for performance and optimization |
+
+
+Simple models are preferred for compliance; complex models offer better accuracy but require justification.
+
+🔍 Task 2 - Exploratory Data Analysis
+EDA in notebooks/1.0-eda.ipynb analyzes the dataset to guide feature engineering.
+Key Steps
+
+Dataset: 16 columns (e.g., CustomerId, Amount, ProductCategory, FraudResult).
+Analysis: Summary stats, histograms for Amount, frequency of ProductCategory, correlations, missing values, outliers.
+Insights: Skewed Amount, imbalanced ProductCategory, missing CountryCode suggest preprocessing needs.
+
+
+⚙️ Task 3 - Feature Engineering Pipeline
+The pipeline in src/data_processing.py prepares transaction data for modeling.
+Key Components
+
+Aggregates: Amount_sum, Amount_mean, Amount_count, Amount_std by CustomerId.
+Date Features: transaction_hour, day, month, year from TransactionStartTime.
+Encoding: One-hot encode ProductCategory, ProviderId, ChannelId.
+Preprocessing: Median imputation for numericals, mode for categoricals, standardize numericals.
+Output: Saves data/processed/transformed_credit_risk_data.csv.
+
+
+📁 Project Structure
 credit-risk-model/
-├── .github/workflows/ci.yml      # CI/CD configuration
-├── data/                         # Raw and processed data (ignored by Git)
-│   ├── raw/                     # Raw datasets (e.g., credit_risk_data.csv)
-│   └── processed/               # Processed datasets (e.g., transformed_credit_risk_data.csv)
+├── .github/workflows/ci.yml      # CI/CD pipeline
+├── data/                         # Raw/processed data (ignored by Git)
+│   ├── raw/                     # e.g., credit_risk_data.csv
+│   └── processed/               # e.g., transformed_credit_risk_data.csv
 ├── notebooks/                    # Exploratory analysis
 │   └── 1.0-eda.ipynb            # EDA notebook
 ├── src/                         # Source code
 │   ├── __init__.py
-│   ├── data_processing.py       # Feature engineering pipeline
-│   ├── train.py                # Model training script
-│   ├── predict.py              # Inference script
-│   └── api/                    # FastAPI application
+│   ├── data_processing.py       # Feature engineering
+│   ├── train.py                # Model training
+│   ├── predict.py              # Inference
+│   └── api/                    # FastAPI app
 │       ├── main.py
 │       └── pydantic_models.py
 ├── tests/                       # Unit tests
 │   └── test_data_processing.py
-├── Dockerfile                   # Docker configuration
-├── docker-compose.yml           # Docker Compose configuration
-├── requirements.txt             # Python dependencies
-├── .gitignore                   # Git ignore file
-└── README.md                    # Project documentation
+├── Dockerfile                   # Docker config
+├── docker-compose.yml           # Docker Compose
+├── requirements.txt             # Dependencies
+├── .gitignore                   # Git ignore
+└── README.md                    # Documentation
 
-Setup
+🛠️ Setup
 
-Clone the repository:git clone <repository-url>
-cd credit-risk-model
+Clone repo:git clone <https://github.com/ruhamds/Credit-Risk-Model.git>
 
 
 Install dependencies:pip install -r requirements.txt
 
 
-Place raw data in data/raw/ (e.g., credit_risk_data.csv).
-Run feature engineering:python src/data_processing.py
+Add data to data/raw/ (e.g., credit_risk_data.csv).
+Run pipeline:python src/data_processing.py
 
 
 
-Usage
+🚀 Usage
 
-Run EDA in notebooks/1.0-eda.ipynb.
-Train the model with python src/train.py.
-Make predictions with python src/predict.py.
-Launch the API with uvicorn src.api.main:app --reload.
+Run EDA: notebooks/1.0-eda.ipynb
+Train model: python src/train.py
+Predict: python src/predict.py
+Launch API: uvicorn src.api.main:app --reload
 
-Requirements
+📋 Requirements
 
 Python 3.8+
 Libraries: pandas, sklearn, numpy, fastapi, uvicorn, flake8, pytest
 
-Task 1: Credit Scoring Business Understanding
-This task focuses on understanding credit risk and its implications for model development, drawing on key references like the Basel II Accord and alternative data guidelines.
-How does the Basel II Accord’s emphasis on risk measurement influence our need for an interpretable and well-documented model?
-The Basel II Accord (https://www3.stat.sinica.edu.tw/statistica/oldpdf/A28n535.pdf) emphasizes robust risk measurement through its Internal Ratings-Based (IRB) approach, requiring banks to estimate Probability of Default (PD), Loss Given Default (LGD), and Exposure at Default (EAD). This mandates interpretable models to ensure regulators can validate risk assessments. Well-documented models, with clear feature engineering (e.g., aggregating transaction amounts) and transparent logic, are essential for compliance, enabling audits and ensuring alignment with capital requirements. In our project, using alternative data like transaction amounts and product categories, interpretability ensures stakeholders understand how features (e.g., Amount_sum) predict PD, supporting Basel II’s transparency requirements.
-Since we lack a direct "default" label, why is creating a proxy variable necessary, and what are the potential business risks of making predictions based on this proxy?
-Our dataset uses FraudResult as a proxy for default, as direct default labels are unavailable. A proxy variable, like FraudResult or frequency of late transactions, is necessary to approximate creditworthiness, especially with alternative data (e.g., ProductCategory like utility bills), as noted in the HKMA reference (https://www.hkma.gov.hk/media/eng/doc/key-functions/financial-infrastructure/alternative_credit_scoring.pdf). This enables modeling for "thin-file" borrowers lacking traditional credit histories. However, business risks include:
+🔜 Next Steps
 
-Inaccuracy: If FraudResult poorly correlates with actual defaults, predictions may be unreliable, leading to incorrect lending decisions.
-Bias: Proxies like transaction patterns may inadvertently favor certain demographics, risking unfair lending practices.
-Regulatory Scrutiny: Regulators may question the proxy’s validity, requiring robust validation (e.g., statistical tests) to ensure compliance.
-
-What are the key trade-offs between using a simple, interpretable model (like Logistic Regression with WoE) versus a complex, high-performance model (like Gradient Boosting) in a regulated financial context?
-Logistic Regression with Weight of Evidence (WoE) is interpretable, aligning with Basel II’s transparency requirements, as it clearly shows how features (e.g., Amount_mean) impact PD. It’s easier to explain to regulators and stakeholders, as described in the Towards Data Science article (https://towards将是
-Task 2: Exploratory Data Analysis (EDA)
-The EDA process, conducted in notebooks/1.0-eda.ipynb, explores the transaction-level dataset to uncover patterns, identify data quality issues, and guide feature engineering. Key steps include:
-
-Dataset Structure: Analyzed the dataset’s structure (e.g., 16 columns including CustomerId, Amount, `Product daqueles
-
-System: Dataset Structure:
-
-Contains 16 columns: TransactionId, BatchId, AccountId, SubscriptionId, CustomerId, CurrencyCode, CountryCode, ProviderId, ProductId, ProductCategory, ChannelId, Amount, Value, TransactionStartTime, PricingStrategy, FraudResult.
-Numerical columns: Amount, Value, PricingStrategy.
-Categorical columns: CurrencyCode, ProviderId, ProductCategory, ChannelId.
-Target variable: FraudResult (proxy for default).
-
-Key Steps
-
-Summary Statistics: Computed central tendency, dispersion, and distribution shape for numerical features (e.g., Amount, Value).
-Numerical Distributions: Visualized histograms and KDE plots to identify skewness (e.g., Amount may be right-skewed) and outliers.
-Categorical Distributions: Analyzed frequency of categories in ProductCategory (e.g., airtime, financial_services) and ChannelId.
-Correlation Analysis: Examined relationships between numerical features (e.g., Amount vs. FraudResult) using a correlation matrix heatmap.
-Missing Values: Identified missing data in CountryCode, ProviderId, AccountId, and Value, suggesting imputation strategies (e.g., median for numerical, mode for categorical).
-Outlier Detection: Used box plots to detect outliers in Amount and Value.
-
-Hypothetical Insights
-
-Skewed Transaction Amounts: Amount is right-skewed, suggesting log-transformation for modeling.
-Imbalanced Product Categories: ProductCategory shows dominance of certain types (e.g., airtime), requiring balancing techniques.
-Missing Data Patterns: Missing CountryCode and ProviderId values may indicate data quality issues, necessitating imputation.
-Correlation with FraudResult: Features like Amount and PricingStrategy may show moderate correlations with FraudResult, guiding feature selection.
-Outliers: Extreme Amount values (e.g., large transactions) may require capping or robust modeling.
-
-These insights inform feature engineering by prioritizing predictive features, handling skewness, and addressing missing data.
-Task 3: Feature Engineering
-The feature engineering pipeline, implemented in src/data_processing.py, transforms raw transaction data into a model-ready format using sklearn.pipeline.Pipeline. Key steps include:
-
-Aggregate Features: Created customer-level features:
-Amount_sum: Total transaction amount per CustomerId.
-Amount_mean: Average transaction amount.
-Amount_count: Number of transactions.
-Amount_std: Standard deviation of transaction amounts.
-
-
-Extracted Features: Derived temporal features from TransactionStartTime:
-transaction_hour, transaction_day, transaction_month, transaction_year.
-
-
-Categorical Encoding: Applied one-hot encoding to ProductCategory, ProviderId, and ChannelId.
-Missing Value Imputation: Imputed numerical features (e.g., Amount) with median and categorical features with mode.
-Standardization: Scaled numerical features to mean 0 and standard deviation 1.
-Output: Generated data/processed/transformed_credit_risk_data.csv with model-ready features.
-
-The pipeline ensures reproducibility and aligns with Basel II’s transparency requirements by documenting transformations clearly.
-Next Steps
-
-Complete model training in src/train.py using Logistic Regression or Gradient Boosting.
-Implement inference logic in src/predict.py.
-Develop unit tests in tests/test_data_processing.py to validate the pipeline.
-Deploy the FastAPI application in src/api/ for real-time predictions.
+Implement src/train.py for model training.
+Add src/predict.py for inference.
+Write tests in tests/test_data_processing.py.
+Deploy API in src/api/.
