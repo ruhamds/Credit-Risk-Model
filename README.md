@@ -1,10 +1,39 @@
-# 💳 Credit Risk Modeling Project
+# Credit Risk Modeling Project
 
-This project builds a credit risk model to predict **Probability of Default (PD)** using alternative data (e.g., transactions, product categories). It aligns with Basel II standards and includes a modular pipeline for EDA, feature engineering, and modeling.
+This project implements a credit risk modeling pipeline using Python and MLflow, culminating in a FastAPI REST API deployment with Docker and CI/CD integration. The tasks progressively build the project from data engineering and model training to API development and containerization.
 
 ---
 
-## 📌 Task 1 - Credit Scoring Business Understanding
+## Project Structure
+
+credit-risk-model/
+├── .github/workflows/ci.yml   # For CI/CD
+├── data/                       # add this folder to .gitignore
+│   ├── raw/                   # Raw data goes here 
+│   └── processed/             # Processed data for training
+├── notebooks/
+│   └── 1.0-eda.ipynb          # Exploratory, one-off analysis
+├── src/
+│   ├── __init__.py
+│   ├── data_processing.py     # Script for feature engineering
+│   ├── train.py               # Script for model training
+│   ├── predict.py             # Script for inference
+│   └── api/
+│       ├── main.py            # FastAPI application
+│       └── pydantic_models.py # Pydantic models for API
+├── tests/
+│   └── test_data_processing.py # Unit tests
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt
+├── .gitignore
+└── README.md
+
+---
+
+## Task Overview
+
+### 📌 Task 1 - Credit Scoring Business Understanding
 
 ### 1. Basel II and Interpretability
 The **Basel II Accord** requires transparent models for PD estimation. Interpretable models (e.g., Logistic Regression) and clear documentation ensure regulatory compliance and stakeholder trust.
@@ -27,86 +56,80 @@ Simple models are preferred for compliance; complex models need justification fo
 
 ---
 
-## 🔍 Task 2 - Exploratory Data Analysis
+### Task 2: Data Profiling, Cleaning, and Exploratory Data Analysis (EDA)
 
-EDA in `notebooks/1.0-eda.ipynb` analyzes a dataset of 95,662 transactions to guide feature engineering.
+- Load and profile dataset.
+- Handle missing values and outliers.
+- Perform feature exploration and visualization.
+- Document data insights to guide feature engineering.
 
-### Key Findings
-- **Dataset**: 16 columns (e.g., `CustomerId`, `Amount`, `ProductCategory`, `FraudResult`).
-- **Numerical**: `Amount` (mean: 6,718, std: 123,307, skewness: 51.1), `Value` (highly correlated with `Amount`: 0.99), `PricingStrategy`, `FraudResult` (imbalanced: 0.2% positive).
-- **Categorical**: `ProductCategory` (top: financial_services, 47.5%), `ChannelId` (top: ChannelId_3, 59.5%).
-- **Issues**: Missing `CountryCode`, `ProviderId`; outliers in `Amount` (30.9%), `Value` (14%).
-- **Insights**: High skewness requires transformation; imbalanced `FraudResult` suggests sampling techniques.
+### Task 3: Feature Engineering Pipeline and Target Variable Creation
+
+- Implement custom feature transformers in `data_processing.py` (e.g., RFM metrics).
+- Create a proxy target variable for credit risk based on business rules.
+- Apply Weight of Evidence (WOE) transformation and calculate Information Value (IV) for feature selection.
+
+### Task 4: Model Training and Evaluation
+
+- Train a Gradient Boosting model using engineered features.
+- Implement SMOTE for class imbalance handling.
+- Perform hyperparameter tuning.
+- Log model and metrics with MLflow for experiment tracking.
+- Visualize model performance with ROC, confusion matrix, etc.
+
+### Task 5: API Development with FastAPI
+
+- Create Pydantic models for input validation (`pydantic_models.py`).
+- Develop prediction endpoint in FastAPI (`api/main.py`) that loads the MLflow model and returns risk predictions.
+- Build modular inference logic (`predict.py`).
+- Test API locally with Uvicorn.
+
+### Task 6: Containerization and CI/CD Pipeline
+
+- Write `Dockerfile` to containerize the FastAPI app.
+- Optionally create `docker-compose.yml` for multi-service setups.
+- Configure GitHub Actions (or similar) for linting, testing, and deployment automation.
+- Use MLflow tracking URI and secrets management in the pipeline.
+- Deploy and test containerized API in local or cloud environment.
 
 ---
 
-## ⚙️ Task 3 - Feature Engineering Pipeline
+## How to Run
 
-The pipeline in `src/data_processing.py` prepares data for modeling, addressing EDA findings.
+### Local setup
 
-### Key Components
-- **Aggregates**: `Amount_sum`, `Amount_mean`, `Amount_count`, `Amount_std` by `CustomerId`.
-- **Date Features**: `transaction_hour`, `day`, `month`, `weekday` from `TransactionStartTime`.
-- **Encoding**: One-hot encode `ProductCategory`, `ProviderId`, `ChannelId`.
-- **Preprocessing**: Log-transform `Amount`, `Value`; median imputation for numericals; mode for categoricals; standardize numericals.
-- **Output**: Saves `data/processed/transformed_credit_risk_data.csv`.
+1. Clone the repo:
 
----
+git clone <repo-url>
+cd credit-risk-model
 
-## 📁 Project Structure
-\`\`\`
-credit-risk-model/
-├── .github/workflows/ci.yml      # CI/CD pipeline
-├── data/                         # Raw/processed data (ignored by Git)
-│   ├── raw/                     # e.g., credit_risk_data.csv
-│   └── processed/               # e.g., transformed_credit_risk_data.csv
-├── notebooks/                    # Exploratory analysis
-│   └── 1.0-eda.ipynb            # EDA notebook
-├── src/                         # Source code
-│   ├── __init__.py
-│   ├── data_processing.py       # Feature engineering
-│   ├── train.py                # Model training
-│   ├── predict.py              # Inference
-│   └── api/                    # FastAPI app
-│       ├── main.py
-│       └── pydantic_models.py
-├── tests/                       # Unit tests
-│   └── test_data_processing.py
-├── Dockerfile                   # Docker config
-├── docker-compose.yml           # Docker Compose
-├── requirements.txt             # Dependencies
-├── .gitignore                   # Git ignore
-└── README.md                    # Documentation
-\`\`\`
+2. Create and activate virtual environment:
 
-## 🛠️ Setup
-1. Clone repo:
-   \`\`\`bash
-   git clone <repository-url>
-   cd credit-risk-model
-   \`\`\`
-2. Install dependencies:
-   \`\`\`bash
-   pip install -r requirements.txt
-   \`\`\`
-3. Add data to `data/raw/` (e.g., `credit_risk_data.csv`).
-4. Run pipeline:
-   \`\`\`bash
-   python src/data_processing.py
-   \`\`\`
+python -m venv venv
+.\venv\Scripts\activate  # Windows PowerShell
+source venv/bin/activate # Linux/Mac
 
-## 🚀 Usage
-- Run EDA: `notebooks/1.0-eda.ipynb`
-- Train model: `python src/train.py`
-- Predict: `python src/predict.py`
-- Launch API: `uvicorn src.api.main:app --reload`
+3. Install dependencies:
 
-## 📋 Requirements
-- Python 3.8+
-- Libraries: pandas, sklearn, numpy, fastapi, uvicorn, flake8, pytest
+pip install -r requirements.txt
 
-## 🔜 Next Steps
-- Implement `src/train.py` with Logistic Regression or Gradient Boosting.
-- Add `src/predict.py` for inference.
-- Write tests in `tests/test_data_processing.py`.
-- Deploy API in `src/api/`
+4. Run API locally:
+
+uvicorn src.api.main:app --reload
+
+Docker setup
+
+1. Build Docker image:
+
+docker build -t credit-risk-api .
+
+2. Run container:
+
+docker run -p 8000:8000 credit-risk-api
+
+3. Access API at http://localhost:8000/docs.
+
+Testing
+
+pytest tests/test_data_processing.py -v
+
