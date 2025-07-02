@@ -2,7 +2,8 @@
 import pytest
 import pandas as pd
 import numpy as np
-from your_module import calculate_rfm_metrics, calculate_iv_score, validate_model_metrics
+from src.data_processing import calculate_rfm_metrics, calculate_iv_score, validate_model_metrics
+
 
 class TestDataProcessing:
 
